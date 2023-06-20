@@ -26,6 +26,7 @@
 #endif
 
 #include "format.h"
+#include "diarkis/common.h"
 
 // Dummy implementations of strerror_r and strerror_s called if corresponding
 // system functions are not available.
@@ -214,7 +215,7 @@ FMT_FUNC void system_error::init(int err_code, string_view format_str,
   memory_buffer buffer;
   format_system_error(buffer, err_code, vformat(format_str, args));
   std::runtime_error& base = *this;
-  base = std::runtime_error(to_string(buffer));
+  base = std::runtime_error(to_string(buffer).c_str());
 }
 
 namespace detail {
@@ -2640,7 +2641,7 @@ inline const char* utf8_decode(const char* buf, uint32_t* c, int* e) {
 
   return next;
 }
-
+#if 0
 struct stringifier {
   template <typename T> FMT_INLINE std::string operator()(T value) const {
     return to_string(value);
@@ -2653,6 +2654,20 @@ struct stringifier {
     return to_string(buf);
   }
 };
+#else
+struct stringifier {
+  template <typename T> FMT_INLINE Diarkis::StdString operator()(T value) const {
+    return to_string(value);
+  }
+  Diarkis::StdString operator()(basic_format_arg<format_context>::handle h) const {
+    memory_buffer buf;
+    format_parse_context parse_ctx({});
+    format_context format_ctx(buffer_appender<char>(buf), {}, {});
+    h.format(parse_ctx, format_ctx);
+    return to_string(buf);
+  }
+};
+#endif
 }  // namespace detail
 
 template <> struct formatter<detail::bigint> {
@@ -2742,6 +2757,7 @@ FMT_FUNC void report_system_error(int error_code,
   report_error(format_system_error, error_code, message);
 }
 
+#if 0
 FMT_FUNC std::string detail::vformat(string_view format_str, format_args args) {
   if (format_str.size() == 2 && equal2(format_str.data(), "{}")) {
     auto arg = args.get(0);
@@ -2752,6 +2768,19 @@ FMT_FUNC std::string detail::vformat(string_view format_str, format_args args) {
   detail::vformat_to(buffer, format_str, args);
   return to_string(buffer);
 }
+#else
+FMT_FUNC Diarkis::StdString detail::vformat(string_view format_str, format_args args) {
+  if (format_str.size() == 2 && equal2(format_str.data(), "{}")) {
+    auto arg = args.get(0);
+    if (!arg) error_handler().on_error("argument not found");
+    return visit_format_arg(stringifier(), arg);
+  }
+  memory_buffer buffer;
+  detail::vformat_to(buffer, format_str, args);
+  return to_string(buffer);
+}
+
+#endif
 
 #ifdef _WIN32
 namespace detail {

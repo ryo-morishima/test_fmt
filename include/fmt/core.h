@@ -17,6 +17,8 @@
 #include <type_traits>
 #include <vector>
 
+#include "diarkis/common.h"
+
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 70103
 
@@ -1954,7 +1956,11 @@ std::basic_string<Char> vformat(
     basic_string_view<Char> format_str,
     basic_format_args<buffer_context<type_identity_t<Char>>> args);
 
+#if 0
 FMT_API std::string vformat(string_view format_str, format_args args);
+#else
+FMT_API Diarkis::StdString vformat(string_view format_str, format_args args);
+#endif
 
 template <typename Char>
 void vformat_to(
@@ -2051,12 +2057,21 @@ inline size_t formatted_size(string_view format_str, Args&&... args) {
   return buf.count();
 }
 
+#if 0
 template <typename S, typename Char = char_t<S>>
 FMT_INLINE std::basic_string<Char> vformat(
     const S& format_str,
     basic_format_args<buffer_context<type_identity_t<Char>>> args) {
   return detail::vformat(to_string_view(format_str), args);
 }
+#else
+template <typename S, typename Char = char_t<S>>
+FMT_INLINE Diarkis::StdString vformat(
+    const S& format_str,
+    basic_format_args<buffer_context<type_identity_t<Char>>> args) {
+  return detail::vformat(to_string_view(format_str), args);
+}
+#endif
 
 /**
   \rst
@@ -2070,11 +2085,20 @@ FMT_INLINE std::basic_string<Char> vformat(
 */
 // Pass char_t as a default template parameter instead of using
 // std::basic_string<char_t<S>> to reduce the symbol size.
+
+#if 0
 template <typename S, typename... Args, typename Char = char_t<S>>
 FMT_INLINE std::basic_string<Char> format(const S& format_str, Args&&... args) {
   const auto& vargs = fmt::make_args_checked<Args...>(format_str, args...);
   return detail::vformat(to_string_view(format_str), vargs);
 }
+#else
+template <typename S, typename... Args, typename Char = char_t<S>>
+FMT_INLINE Diarkis::StdString format(const S& format_str, Args&&... args) {
+  const auto& vargs = fmt::make_args_checked<Args...>(format_str, args...);
+  return detail::vformat(to_string_view(format_str), vargs);
+}
+#endif
 
 FMT_API void vprint(string_view, format_args);
 FMT_API void vprint(std::FILE*, string_view, format_args);

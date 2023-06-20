@@ -3726,13 +3726,23 @@ arg_join<detail::iterator_t<Range>, detail::sentinel_t<Range>, wchar_t> join(
     std::string answer = fmt::to_string(42);
   \endrst
  */
+#if 0
 template <typename T, FMT_ENABLE_IF(!std::is_integral<T>::value)>
 inline std::string to_string(const T& value) {
   std::string result;
   detail::write<char>(std::back_inserter(result), value);
   return result;
 }
+#else
+template <typename T, FMT_ENABLE_IF(!std::is_integral<T>::value)>
+inline Diarkis::StdString to_string(const T& value) {
+  Diarkis::StdString result;
+  detail::write<char>(std::back_inserter(result), value);
+  return result;
+}
+#endif
 
+#if 0
 template <typename T, FMT_ENABLE_IF(std::is_integral<T>::value)>
 inline std::string to_string(T value) {
   // The buffer should be large enough to store the number including the sign or
@@ -3742,6 +3752,17 @@ inline std::string to_string(T value) {
   char* begin = buffer;
   return std::string(begin, detail::write<char>(begin, value));
 }
+#else
+template <typename T, FMT_ENABLE_IF(std::is_integral<T>::value)>
+inline Diarkis::StdString to_string(T value) {
+  // The buffer should be large enough to store the number including the sign or
+  // "false" for bool.
+  constexpr int max_size = detail::digits10<T>() + 2;
+  char buffer[max_size > 5 ? static_cast<unsigned>(max_size) : 5];
+  char* begin = buffer;
+  return Diarkis::StdString(begin, detail::write<char>(begin, value));
+}
+#endif
 
 /**
   Converts *value* to ``std::wstring`` using the default format for type *T*.
@@ -3750,12 +3771,22 @@ template <typename T> inline std::wstring to_wstring(const T& value) {
   return format(L"{}", value);
 }
 
+#if 0
 template <typename Char, size_t SIZE>
 std::basic_string<Char> to_string(const basic_memory_buffer<Char, SIZE>& buf) {
   auto size = buf.size();
   detail::assume(size < std::basic_string<Char>().max_size());
   return std::basic_string<Char>(buf.data(), size);
 }
+#else
+template <typename Char, size_t SIZE>
+Diarkis::StdString to_string(const basic_memory_buffer<Char, SIZE>& buf) {
+  auto size = buf.size();
+  // TODO:
+  //detail::assume(size < std::basic_string<Char>().max_size());
+  return Diarkis::StdString(buf.data(), size);
+}
+#endif
 
 template <typename Char>
 void detail::vformat_to(
