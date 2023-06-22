@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <vector>
 
-#include "diarkis/common.h"
+#include <diarkis/common.h>
 
 // The fmt library version in the form major * 10000 + minor * 100 + patch.
 #define FMT_VERSION 70103
